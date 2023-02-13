@@ -2,8 +2,6 @@ import json
 from datetime import datetime
 from os.path import dirname, join
 
-import pytest
-from city_scrapers_core.constants import CITY_COUNCIL
 from freezegun import freeze_time
 
 from city_scrapers.spiders.daltx_city_council import DaltxCityCouncilSpider
@@ -11,7 +9,9 @@ from city_scrapers.spiders.daltx_city_council import DaltxCityCouncilSpider
 freezer = freeze_time("2023-02-10")
 freezer.start()
 
-with open(join(dirname(__file__), "files", "daltx_city_council.json"), "r", encoding="utf-8") as f:
+with open(
+    join(dirname(__file__), "files", "daltx_city_council.json"), "r", encoding="utf-8"
+) as f:
     test_response = json.load(f)
 
 spider = DaltxCityCouncilSpider()
@@ -31,6 +31,7 @@ def test_location():
         "location" == "COUNCIL BRIEFING ROOM, 6ES"
     }
 """
+
 
 def test_title():
     assert parsed_items[0]["title"] == "Municipal Library Board"
@@ -53,7 +54,10 @@ def test_start():
 
 
 def test_id():
-    assert parsed_items[0]["id"] == "daltx_city_council/202302281600/x/municipal_library_board"
+    assert (
+        parsed_items[0]["id"]
+        == "daltx_city_council/202302281600/x/municipal_library_board"
+    )
 
 
 def test_status():
@@ -61,7 +65,9 @@ def test_status():
 
 
 def test_source():
-    assert parsed_items[0]["source"] == "https://cityofdallas.legistar.com/Calendar.aspx"
+    assert (
+        parsed_items[0]["source"] == "https://cityofdallas.legistar.com/Calendar.aspx"
+    )
 
 
 # def test_links():

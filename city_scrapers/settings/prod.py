@@ -47,7 +47,7 @@ FEED_FORMAT = "jsonlines"
 
 FEED_STORAGES = {
     # "s3": "scrapy.extensions.feedexport.S3FeedStorage",
-    # "azure": "city_scrapers_core.extensions.AzureBlobFeedStorage",
+    "azure": "city_scrapers_core.extensions.AzureBlobFeedStorage",
     # "gcs": "scrapy.extensions.feedexport.GCSFeedStorage",
 }
 

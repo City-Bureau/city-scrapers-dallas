@@ -26,11 +26,14 @@ def test_tests():
     print("Please write some tests for this spider or at least disable this one.")
     assert False
 
+"""
+
+
 def test_location():
     assert parsed_items[0]["location"] == {
-        "location" == "COUNCIL BRIEFING ROOM, 6ES"
+        "name": "COUNCIL BRIEFING ROOM, 6ES",
+        "address": "",
     }
-"""
 
 
 def test_title():
@@ -79,6 +82,11 @@ def test_source():
 
 def test_classification():
     assert parsed_items[0]["classification"] == "City Council"
+
+
+# @pytest.mark.parametrize("item", parsed_items)
+# def test_all_day(item):
+#     assert item["all_day"] is False
 
 
 # @pytest.mark.parametrize("item", parsed_items)

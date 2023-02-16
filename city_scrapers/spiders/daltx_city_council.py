@@ -59,7 +59,7 @@ class DaltxCityCouncilSpider(LegistarSpider):
 
     def _parse_location(self, item):
         """Parse or generate location."""
-        return{
+        return {
             "address": "1500 Marilla Street Dallas, TX 75201",
             "name": item.get("Meeting Location", ""),
         }

@@ -59,12 +59,7 @@ class DaltxCityCouncilSpider(LegistarSpider):
 
     def _parse_location(self, item):
         """Parse or generate location."""
-        address = ""
-        location = item.get("Meeting Location", "")
-        if isinstance(location, dict):
-            address = location.get("url", "")
-            location = location.get("label", "")
-        return {
-            "address": address,
-            "name": location,
+        return{
+            "address": "1500 Marilla Street Dallas, TX 75201",
+            "name": item.get("Meeting Location", ""),
         }

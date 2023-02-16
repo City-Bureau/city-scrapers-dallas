@@ -27,7 +27,7 @@ class DaltxCityCouncilSpider(LegistarSpider):
                 end=self._parse_end(event),
                 all_day=self._parse_all_day(event),
                 time_notes=self._parse_time_notes(event),
-                location=event["Meeting Location"],
+                location=self._parse_location(event),
                 links=self.legistar_links(event),
                 source=self.legistar_source(event),
             )
@@ -59,7 +59,12 @@ class DaltxCityCouncilSpider(LegistarSpider):
 
     def _parse_location(self, item):
         """Parse or generate location."""
+        address = ""
+        location = item.get("Meeting Location", "")
+        if isinstance(location, dict):
+            address = location.get("url", "")
+            location = location.get("label", "")
         return {
-            "address": "",
-            "name": "",
+            "address": address,
+            "name": location,
         }

@@ -32,7 +32,7 @@ def test_tests():
 def test_location():
     assert parsed_items[0]["location"] == {
         "name": "COUNCIL BRIEFING ROOM, 6ES",
-        "address": "",
+        "address": "1500 Marilla Street Dallas, TX 75201",
     }
 
 

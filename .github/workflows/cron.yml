@@ -62,4 +62,4 @@ jobs:
       - name: Combine output feeds
         run: |
           export PYTHONPATH=$(pwd):$PYTHONPATH
-          pipenv run scrapy combinefeeds -s LOG_ENABLED=False
+          pipenv run scrapy combinefeeds -s LOG_ENABLED=True

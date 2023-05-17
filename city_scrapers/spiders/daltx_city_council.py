@@ -28,8 +28,7 @@ class DaltxCityCouncilSpider(LegistarSpider):
                 all_day=self._parse_all_day(event),
                 time_notes=self._parse_time_notes(event),
                 location=self._parse_location(event),
-                links=self._parse_links(event),
-                # links=self.legistar_links(event),
+                links=self.legistar_links(event),
                 source=self.legistar_source(event),
             )
 
@@ -69,8 +68,3 @@ class DaltxCityCouncilSpider(LegistarSpider):
             "name": location,
             "address": address,
         }
-
-    def _parse_links(self, item):
-        links = item.get("Agenda", "")
-
-        return links

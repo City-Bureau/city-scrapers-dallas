@@ -87,3 +87,8 @@ def test_classification():
 # @pytest.mark.parametrize("item", parsed_items)
 # def test_all_day(item):
 #     assert item["all_day"] is False
+
+
+def test_empty_meeting_time():
+    """Test that empty meeting time is set to default time (0:00 AM)"""
+    assert parsed_items[1]["start"] == datetime(2023, 2, 27, 0, 0)

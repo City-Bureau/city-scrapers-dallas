@@ -11,6 +11,12 @@ class DaltxCityCouncilSpider(LegistarSpider):
     # Add the titles of any links not included in the scraped results
     link_types = []
 
+    DEFAULT_MEETING_TIME = "0:00 AM"
+
+    def _preprocess_meeting_time(self, event):
+        """Preprocess meeting time to ensure it has a valid value."""
+        return event.get("Meeting Time") or self.DEFAULT_MEETING_TIME
+
     def parse_legistar(self, events):
         """
         `parse_legistar` should always `yield` Meeting items.
@@ -19,6 +25,7 @@ class DaltxCityCouncilSpider(LegistarSpider):
         needs.
         """
         for event in events:
+            event["Meeting Time"] = self._preprocess_meeting_time(event)
             meeting = Meeting(
                 title=event["Name"],
                 description=self._parse_description(event),

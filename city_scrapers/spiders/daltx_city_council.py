@@ -80,8 +80,6 @@ class DaltxCityCouncilSpider(LegistarSpider):
 
     def _parse_legistar_events(self, response):
         """Override the parent method to fix iCalendar URL issue"""
-        print("Custom _parse_legistar_events called...")
-
         events_table = response.css("table.rgMasterTable")[0]
 
         headers = []
@@ -97,16 +95,10 @@ class DaltxCityCouncilSpider(LegistarSpider):
             else:
                 headers.append(header.css("img")[0].attrib["alt"])
 
-        print(f"Extracted headers: {headers}")
-
         events = []
         for row in events_table.css("tr.rgRow, tr.rgAltRow"):
             try:
                 data = defaultdict(lambda: None)
-
-                # Debug row
-                row_cells = row.css("td")
-                print(f"Row has {len(row_cells)} cells")
 
                 for header, field in zip(headers, row.css("td")):
                     field_text = (
@@ -127,7 +119,6 @@ class DaltxCityCouncilSpider(LegistarSpider):
                             url = response.urljoin(link_el.attrib["href"])
 
                     if url and ("View.ashx?M=IC" in url):
-                        print(f"Found iCalendar URL: {url}")
                         data["iCalendar"] = {"url": url}
                     elif url:
                         value = {"label": field_text, "url": url}
@@ -139,8 +130,5 @@ class DaltxCityCouncilSpider(LegistarSpider):
                     events.append(dict(data))
             except Exception as e:
                 print(f"Error processing row: {str(e)}")
-                import traceback
-
-                print(traceback.format_exc())
 
         return events

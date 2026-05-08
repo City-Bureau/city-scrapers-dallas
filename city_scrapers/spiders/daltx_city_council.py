@@ -41,7 +41,13 @@ class DaltxCityCouncilSpider(LegistarSpider):
                 source=self.legistar_source(event),
             )
 
-            meeting["status"] = self._get_status(meeting)
+            location_raw = event.get("Meeting Location", "") or ""
+            location_text = (
+                location_raw.get("label", "")
+                if isinstance(location_raw, dict)
+                else location_raw
+            )
+            meeting["status"] = self._get_status(meeting, text=location_text)
             meeting["id"] = self._get_id(meeting)
 
             yield meeting
@@ -126,9 +132,18 @@ class DaltxCityCouncilSpider(LegistarSpider):
                     else:
                         data[header] = field_text
 
+                ical_url = (
+                    data["iCalendar"].get("url")
+                    if isinstance(data.get("iCalendar"), dict)
+                    else None
+                )
+                if ical_url is not None:
+                    if ical_url in self._scraped_urls:
+                        continue
+                    self._scraped_urls.add(ical_url)
                 if data:
                     events.append(dict(data))
             except Exception as e:
-                print(f"Error processing row: {str(e)}")
+                self.logger.warning(f"Error processing row: {str(e)}")
 
         return events

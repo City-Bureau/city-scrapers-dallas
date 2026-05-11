@@ -97,8 +97,7 @@ def test_empty_meeting_time():
 def test_cancelled_status():
     """Meetings with CANCELLED in Meeting Location should have cancelled status"""
     cancelled = next(
-        (m for m in parsed_items if "CANCELLED" in (m["location"]["name"] or "")),
-        None
+        (m for m in parsed_items if "CANCELLED" in (m["location"]["name"] or "")), None
     )
     assert cancelled is not None, "No cancelled meeting found in parsed_items"
     assert cancelled["status"] == "cancelled"

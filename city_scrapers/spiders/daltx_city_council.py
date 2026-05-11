@@ -41,13 +41,9 @@ class DaltxCityCouncilSpider(LegistarSpider):
                 source=self.legistar_source(event),
             )
 
-            location_raw = event.get("Meeting Location", "") or ""
-            location_text = (
-                location_raw.get("label", "")
-                if isinstance(location_raw, dict)
-                else location_raw
+            meeting["status"] = self._get_status(
+                meeting, text=meeting["location"]["name"] or ""
             )
-            meeting["status"] = self._get_status(meeting, text=location_text)
             meeting["id"] = self._get_id(meeting)
 
             yield meeting
@@ -144,6 +140,6 @@ class DaltxCityCouncilSpider(LegistarSpider):
                 if data:
                     events.append(dict(data))
             except Exception as e:
-                self.logger.warning(f"Error processing row: {str(e)}")
+                self.logger.warning(f"Error processing row: {e}", exc_info=True)
 
         return events

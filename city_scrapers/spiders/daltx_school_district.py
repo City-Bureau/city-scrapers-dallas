@@ -61,7 +61,7 @@ class DaltxSchoolDistrictSpider(CityScrapersSpider):
             links=self._parse_links(item.get("Id")),
             source=self.source_url,
         )
-        meeting["status"] = self._get_status(meeting)
+        meeting["status"] = self._get_status(meeting, text=item.get("Name", ""))
         meeting["id"] = self._get_id(meeting)
         return meeting
 

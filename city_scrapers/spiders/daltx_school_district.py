@@ -1,4 +1,3 @@
-import json
 import re
 from datetime import date, datetime, timedelta, timezone
 from html import unescape
@@ -16,7 +15,6 @@ class DaltxSchoolDistrictSpider(CityScrapersSpider):
     timezone = "America/Chicago"
     base_url = "https://dallasisd.community.highbond.com"
     meetings_api_url = f"{base_url}/Services/MeetingsService.svc/meetings"
-    video_api_url = f"{base_url}/api/videolink"
     source_url = f"{base_url}/Portal/MeetingSchedule.aspx"
     custom_settings = {"ROBOTSTXT_OBEY": False}
 
@@ -88,7 +86,7 @@ class DaltxSchoolDistrictSpider(CityScrapersSpider):
             meeting["status"] = self._get_status(meeting, text=name)
 
         video_url = (
-            f"{self.video_api_url}/{int(meeting_id)}"
+            f"{self.meetings_api_url}/{int(meeting_id)}/meetingData"
             f"?_={int(datetime.now(timezone.utc).timestamp() * 1000)}"
         )
         yield scrapy.Request(
@@ -98,7 +96,8 @@ class DaltxSchoolDistrictSpider(CityScrapersSpider):
         )
 
     def parse_video_link(self, response, meeting):
-        video_href = self._parse_video_href(response)
+        data = response.json()
+        video_href = data.get("MeetingExternalLinkUrl", "")
         if video_href:
             meeting["links"].append({"href": video_href, "title": "Video"})
         meeting["id"] = self._get_id(meeting)
@@ -129,7 +128,7 @@ class DaltxSchoolDistrictSpider(CityScrapersSpider):
         name_lower = type_name.lower()
         if "committee" in name_lower:
             return COMMITTEE
-        if "board" in name_lower:
+        if "board" in name_lower or "hearing" in name_lower:
             return BOARD
         return NOT_CLASSIFIED
 
@@ -195,40 +194,3 @@ class DaltxSchoolDistrictSpider(CityScrapersSpider):
             encoded_name = quote(unescape(name), safe="")
             return f"{self.base_url}/document/{doc_id}/{encoded_name}.pdf"
         return f"{self.base_url}/document/{doc_id}/"
-
-    def _parse_video_href(self, response):
-        text = response.text.strip()
-        if not text or text == '""':
-            return None
-
-        if text.startswith("http"):
-            return text
-
-        try:
-            data = json.loads(text)
-        except json.JSONDecodeError:
-            self.logger.warning("Failed to parse video API response")
-            return None
-
-        if isinstance(data, str):
-            return data.strip() or None
-
-        if isinstance(data, list):
-            if not data:
-                return None
-            data = data[0]
-
-        if not isinstance(data, dict) or not data.get("ShowVideoLink"):
-            return None
-
-        youtube_event_id = data.get("YouTubeEventId")
-        if data.get("YouTube") and youtube_event_id:
-            return f"https://www.youtube.com/watch?v={youtube_event_id}"
-
-        document_id = data.get("DocumentId") or data.get("Id")
-        if document_id:
-            return (
-                f"{self.base_url}/document/{document_id}/?splitscreen=true&media=true"
-            )
-
-        return None

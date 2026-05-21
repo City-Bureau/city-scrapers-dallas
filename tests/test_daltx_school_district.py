@@ -44,7 +44,10 @@ docs_response = TextResponse(
     body=docs_data,
 )
 video_response = TextResponse(
-    url="https://dallasisd.community.highbond.com/api/videolink/826?_=0",
+    url=(
+        "https://dallasisd.community.highbond.com"
+        "/Services/MeetingsService.svc/meetings/826/meetingData?_=0"
+    ),
     body=video_data,
 )
 
@@ -69,8 +72,11 @@ cancelled_docs_response = TextResponse(
     body=b'{"Documents":[],"MeetingDateFormatted":"Feb 18, 2026"}',
 )
 cancelled_video_response = TextResponse(
-    url="https://dallasisd.community.highbond.com/api/videolink/755?_=0",
-    body=video_data,
+    url=(
+        "https://dallasisd.community.highbond.com"
+        "/Services/MeetingsService.svc/meetings/755/meetingData?_=0"
+    ),
+    body=b'{"MeetingExternalLinkUrl": ""}',
 )
 cancelled_doc_req = parse_requests[17]
 cancelled_video_reqs = list(
@@ -109,8 +115,8 @@ def test_location():
 
 
 def test_classification():
-    assert intermediate_items[0]["classification"] == "Not classified"
-    assert intermediate_items[1]["classification"] == "Board"
+    assert intermediate_items[0]["classification"] == "Board"  # Public Hearing
+    assert intermediate_items[1]["classification"] == "Board"  # Board Meeting
 
 
 def test_status():
@@ -126,7 +132,11 @@ def test_links():
                 "/Public%20Hearing%20Agenda%20and%20Notice%20%20-%20May%2028%202026.pdf"
             ),
             "title": "Agenda",
-        }
+        },
+        {
+            "href": "https://dallasisdtx.new.swagit.com/videos/384412",
+            "title": "Video",
+        },
     ]
 
 

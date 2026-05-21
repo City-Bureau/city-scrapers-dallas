@@ -19,6 +19,8 @@ class DaltxBotSpider(CityScrapersSpider):
 
         for item in records:
             detail_url = item.css("h4.cal-header a::attr(href)").get()
+            if not detail_url:
+                continue
 
             yield response.follow(
                 url=response.urljoin(detail_url),
@@ -60,12 +62,20 @@ class DaltxBotSpider(CityScrapersSpider):
     def _parse_datetime(self, item) -> tuple[datetime, datetime, bool]:
         date_list = item.css(".month::text, .day::text, .year::text").getall()
         date_str = " ".join(date_list).strip()
+        if not date_str:
+            self.logger.warning(f"Missing date for item: {item.get()}")
+            return None, None, False
 
         start_time = item.css(".mb-2 span:nth-child(2)::text").get()
         end_time = item.css(".mb-2 span:nth-child(3)::text").get()
 
         if start_time == "All day":
-            return date_parser(f"{date_str}"), date_parser(f"{date_str}"), True
+            dt = date_parser(date_str)
+            return dt, dt, True
+
+        if not start_time or not end_time:
+            dt = date_parser(date_str)
+            return dt, dt, False
 
         start_dt = date_parser(f"{date_str} {start_time.strip()}")
         end_dt = date_parser(f"{date_str} {end_time.strip()}")
@@ -82,10 +92,10 @@ class DaltxBotSpider(CityScrapersSpider):
         time_notes = ""
 
         if all_day:
-            time_notes = item[2].strip() if item else ""
+            time_notes = item[2].strip() if len(item) > 2 else ""
             return location, time_notes
 
-        if item and len(item) > 1:
+        if len(item) > 2:
             location["name"] = item[1].strip()
             location["address"] = item[2].strip()
         return location, time_notes
@@ -103,7 +113,8 @@ class DaltxBotSpider(CityScrapersSpider):
                 [
                     {
                         "href": response.urljoin(link.attrib["href"]),
-                        "title": link.css("::text").get().strip() or "Attachment",
+                        "title": (link.css("::text").get() or "").strip()
+                        or "Attachment",
                     }
                     for link in pdf_links
                 ]

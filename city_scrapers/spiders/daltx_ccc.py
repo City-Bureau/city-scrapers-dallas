@@ -35,7 +35,11 @@ class DaltxCccSpider(CityScrapersSpider):
     MINUTES_TYPES = {2, 10}
     KNOWN_LOCATIONS = [
         {
-            "keywords": ["commissioners court room", "george allen"],
+            "keywords": [
+                "commissioners court room",
+                "george allen",
+                "records building",
+            ],
             "address": "500 Elm Street, Dallas, TX 75202",
         },
         {
@@ -221,21 +225,19 @@ class DaltxCccSpider(CityScrapersSpider):
             if not doc.get("IsPublic") and not self.include_non_public_documents:
                 continue
 
-            searchable_text = " ".join(
-                [
-                    str(doc.get("Html", "")),
-                    str(doc.get("AgendaCover", "")),
-                    str(doc.get("Name", "")),
-                ]
-            ).lower()
-
-            if "cancelled" in searchable_text or "canceled" in searchable_text:
+            name = (doc.get("Name") or "").lower()
+            agenda_cover = (doc.get("AgendaCover") or "").lower()
+            if any(
+                kw in name or kw in agenda_cover for kw in ["cancelled", "canceled"]
+            ):
+                return True
+            html = (doc.get("Html") or "").lower()
+            if "cancelled" in html or "canceled" in html:
                 return True
 
         return False
 
     def _parse_document_links(self, documents):
-        # Collect names of PDF minutes to identify HTML counterparts by name
         minutes_pdf_names = {
             unescape((doc.get("Name") or "").strip())
             for doc in documents

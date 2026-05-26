@@ -107,3 +107,12 @@ def test_classification():
 def test_empty_meeting_time():
     """Test that empty meeting time is set to default time (0:00 AM)"""
     assert parsed_items[1]["start"] == datetime(2023, 2, 27, 0, 0)
+
+
+def test_cancelled_status():
+    """Meetings with CANCELLED in Meeting Location should have cancelled status"""
+    cancelled = next(
+        (m for m in parsed_items if "CANCELLED" in (m["location"]["name"] or "")), None
+    )
+    assert cancelled is not None, "No cancelled meeting found in parsed_items"
+    assert cancelled["status"] == "cancelled"

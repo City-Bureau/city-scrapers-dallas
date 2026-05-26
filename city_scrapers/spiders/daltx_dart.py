@@ -1,7 +1,6 @@
 import json
 import re
 from datetime import datetime
-from difflib import SequenceMatcher
 from itertools import groupby
 from urllib.parse import urljoin
 
@@ -17,9 +16,8 @@ class DaltxDartSpider(CityScrapersSpider):
     timezone = "America/Chicago"
 
     # Current meetings + upcoming calendar
-    start_urls = [
-        "https://www.dart.org/about/public-access-information/board-meetings-information"  # noqa
-    ]
+    start_urls = "https://www.dart.org/about/public-access-information/board-meetings-information"  # noqa
+
 
     custom_settings = {
         "ROBOTSTXT_OBEY": False,
@@ -61,12 +59,13 @@ class DaltxDartSpider(CityScrapersSpider):
 
     # Populated while video pages are scraped.
     # Keyed by datetime.date → list of {"title": str, "href": str}
-    _video_index: dict = {}
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._video_index = {}
 
     def start_requests(self):
         # Upcoming meetings DART page
-        for url in self.start_urls:
-            yield scrapy.Request(url, callback=self.parse)
+        yield scrapy.Request(self.start_urls, callback=self.parse)
 
         # Video archive tabs (run in parallel with the main crawl)
         for tab in self.VIDEO_TABS:
@@ -92,9 +91,9 @@ class DaltxDartSpider(CityScrapersSpider):
         yield from self._yield_meetings_from_rows(rows, response.url)
 
         seen_dates = {
-            self._parse_dt(r.get("meetingDate"), None).date()
+            dt.date()
             for r in rows
-            if self._parse_dt(r.get("meetingDate"), None)
+            if (dt := self._parse_dt(r.get("meetingDate"), None))
         }
         yield from self._parse_grid_data(response, exclude_dates=seen_dates)
         yield from self._paginate_archive(page=1)
@@ -134,6 +133,7 @@ class DaltxDartSpider(CityScrapersSpider):
         """
         rows = response.css("table.videos tbody tr")
         if not rows:
+            self.logger.warning("Video page: no rows found")
             return
 
         for row in rows:
@@ -160,35 +160,42 @@ class DaltxDartSpider(CityScrapersSpider):
         if next_href:
             yield response.follow(next_href, callback=self._parse_video_page)
 
-    def _find_video_link(self, meeting_start: datetime, title: str) -> dict | None:
+    def _titles_match(self, meeting_title: str, video_title: str) -> bool:
         """
-        Return the best-matching Video link for a meeting, or None.
+        Return True if the meeting title contains at least 50% of the
+        words from the video title (after normalization).
+        Video titles are shorter and more canonical.
+        """
+        meeting_words = set(self._norm_title(meeting_title).split())
+        video_words = set(self._norm_title(video_title).split())
+        if not video_words:
+            return False
+        overlap = meeting_words & video_words
+        return len(overlap) / len(video_words) >= 0.5
 
-        Matching strategy:
-          1. Exact date match (meeting_start.date() must be in _video_index).
-          2. Best fuzzy title overlap via SequenceMatcher ratio.
-          3. Threshold of 0.3 — low bar because dates already anchor matches
-             and video page titles are terse ("Board Meeting" vs. full DART title).
-        """
+    def _find_video_link(self, meeting_start: datetime, title: str) -> dict | None:
         candidates = self._video_index.get(meeting_start.date(), [])
         if not candidates:
+            self.logger.warning("No video candidates for %s", meeting_start)
             return None
 
-        norm_query = self._norm_title(title)
+        matches = [c for c in candidates if self._titles_match(title, c["title"])]
+        if not matches:
+            self.logger.warning("No video matches for %s", title)
+            return None
 
-        def score(candidate):
-            return SequenceMatcher(
-                None, norm_query, self._norm_title(candidate["title"])
-            ).ratio()
-
-        best = max(candidates, key=score)
-        if score(best) >= 0.3:
-            return {"href": best["href"], "title": "Video"}
-        return None
+        # If multiple match, prefer the one with the most word overlap
+        best = max(matches, key=lambda c: len(
+            set(self._norm_title(title).split()) & set(self._norm_title(c["title"]).split())
+        ))
+        return {"href": best["href"], "title": "Video"}
 
     def _norm_title(self, title: str) -> str:
-        """Lowercase, strip punctuation, and expand known abbreviations."""
-        normalized = re.sub(r"[^a-z0-9 ]", "", title.lower()).strip()
+        normalized = title.lower()
+        normalized = normalized.replace("-", " ")
+        normalized = re.sub(r"\(.*?\)", "", normalized)  # strip (Work Session)
+        normalized = re.sub(r"[^a-z0-9 ]", "", normalized)
+        normalized = re.sub(r"\s+", " ", normalized).strip()
         for alias, expansion in self.TRINITY_TITLE_ALIASES.items():
             normalized = normalized.replace(alias, expansion)
         return normalized
@@ -281,6 +288,7 @@ class DaltxDartSpider(CityScrapersSpider):
             item.get(time_field) if time_field else None,
         )
         if start is None:
+            self.logger.warning("No date found for '%s'", item.get("title", ""))
             return None
 
         meeting = Meeting(
@@ -301,8 +309,8 @@ class DaltxDartSpider(CityScrapersSpider):
 
     def _extract_js_array(self, text: str, var_name: str) -> list:
         """Extract and parse a JS array assigned to `var_name` in page source."""
-        pattern = re.escape(var_name) + r"\s*=\s*(\[.*?\]);"
-        match = re.search(pattern, text, re.DOTALL)
+        pattern = re.escape(var_name) + r"\s*=\s*(\[.*\]);"
+        match = re.search(pattern, text)
         if not match:
             self.logger.warning("Could not find '%s' in page source", var_name)
             return []
@@ -316,7 +324,8 @@ class DaltxDartSpider(CityScrapersSpider):
         """Parse meeting title, stripping leading date prefixes like '2026-05-18 '."""
         title = item.get("title", "").strip()
         title = re.sub(r"^\d{4}-\d{2}-\d{2}\s+", "", title)
-        return title
+        title = re.sub(r"\s*\(Cancell?ed\)\s*", "", title, flags=re.IGNORECASE)
+        return title.strip()
 
     def _parse_classification(self, item: dict) -> int:
         """Return BOARD for board meetings, COMMITTEE for committee meetings."""
@@ -334,6 +343,7 @@ class DaltxDartSpider(CityScrapersSpider):
         Falls back to DEFAULT_MEETING_TIME when time is absent or unparseable.
         """
         if not date_str:
+            self.logger.warning("Missing date string")
             return None
         try:
             dt = datetime.fromisoformat(date_str[:10])
@@ -367,6 +377,7 @@ class DaltxDartSpider(CityScrapersSpider):
                 t = datetime.strptime(normalised, fmt)
                 return t.hour, t.minute
             except ValueError:
+                self.logger.warning("Time string '%s' does not match format '%s'", normalised, fmt)
                 continue
 
         self.logger.warning("Could not parse time string: '%s'", time_str)

@@ -1,0 +1,14 @@
+[
+  {
+    "ExternalCalendar": false,
+    "Id": 2097,
+    "MeetingDate": "2026-05-19",
+    "MeetingDateTime": "2026-05-19 09:00",
+    "MeetingLocation": "Commissioners Court Room",
+    "MeetingTime": "09:00 AM",
+    "Name": "Commissioners Court - May 19 2026",
+    "Published": true,
+    "TypeId": 10,
+    "VideoIcon": "<em class='video-event glyphicon glyphicon-facetime-video' data-id='2097' aria-label='Includes Video' style='position: absolute; right: 0px; top: 9px; margin: 0 0 0 0.4em; text-indent: 0em;'><\/em>"
+  }
+]

@@ -37,6 +37,7 @@ class DaltxCccSpider(CityScrapersSpider):
         {
             "keywords": [
                 "commissioners court room",
+                "commissioner court room",
                 "george allen",
                 "records building",
             ],
@@ -204,7 +205,12 @@ class DaltxCccSpider(CityScrapersSpider):
                 return None
             data = data[0]
 
-        if not isinstance(data, dict) or not data.get("ShowVideoLink"):
+        if not isinstance(data, dict):
+            self.logger.warning(
+                "Unexpected video API response type: %s", type(data).__name__
+            )
+            return None
+        if not data.get("ShowVideoLink"):
             return None
 
         youtube_event_id = data.get("YouTubeEventId")
@@ -218,6 +224,9 @@ class DaltxCccSpider(CityScrapersSpider):
                 f"{document_id}/?splitscreen=true&media=true"
             )
 
+        self.logger.warning(
+            "ShowVideoLink is True but no YouTube or document ID found: %s", data
+        )
         return None
 
     def _is_cancelled(self, documents):
@@ -284,6 +293,9 @@ class DaltxCccSpider(CityScrapersSpider):
         name = (doc.get("Name") or "").strip()
 
         if not doc_id:
+            self.logger.warning(
+                "Document missing Id, skipping: %s", name or "(unnamed)"
+            )  # noqa
             return None
 
         if doc.get("Html"):
@@ -333,6 +345,7 @@ class DaltxCccSpider(CityScrapersSpider):
         dt_str = item.get("MeetingDateTime", "")
         if dt_str:
             return datetime.strptime(dt_str, "%Y-%m-%d %H:%M")
+        self.logger.warning("Meeting missing MeetingDateTime: %s", item.get("Id"))
         return None
 
     def _parse_time_notes(self, start):

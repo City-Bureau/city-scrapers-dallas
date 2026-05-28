@@ -327,7 +327,7 @@ class DaltxDartSpider(CityScrapersSpider):
         """Parse meeting title, stripping leading date prefixes like '2026-05-18 '."""
         title = item.get("title", "").strip()
         title = re.sub(r"^\d{4}-\d{2}-\d{2}\s+", "", title)
-        title = re.sub(r"\(Cancell?ed\)", "Cancelled", title, flags=re.IGNORECASE)
+        title = re.sub(r"\((Cancell?ed?)\)", r"\1", title, flags=re.IGNORECASE)
         return title.strip()
 
     def _parse_classification(self, item: dict) -> int:

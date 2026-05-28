@@ -22,7 +22,8 @@ def parsed_items():
 
     with freeze_time("2026-05-21"):
         return [
-            item for item in spider.parse(upcoming_response)
+            item
+            for item in spider.parse(upcoming_response)
             if not isinstance(item, scrapy.Request)
         ]
 
@@ -40,10 +41,12 @@ def parsed_archive_items():
     )
 
     with freeze_time("2026-05-21"):
-        return list(spider._yield_meetings_from_rows(
-            spider._extract_js_array(archive_response.text, "var data"),
-            archive_response.url,
-        ))
+        return list(
+            spider._yield_meetings_from_rows(
+                spider._extract_js_array(archive_response.text, "var data"),
+                archive_response.url,
+            )
+        )
 
 
 #  Upcoming and currrent meetings page tests
@@ -57,7 +60,10 @@ def test_no_duplicates(parsed_items):
 
 
 def test_title(parsed_items):
-    assert parsed_items[0]["title"] == "DART NOTICE of Possible Quorum at Dallas City Council Transportation and Infrastructure Committee Meeting"  # noqa
+    assert (
+        parsed_items[0]["title"]
+        == "DART NOTICE of Possible Quorum at Dallas City Council Transportation and Infrastructure Committee Meeting"  # noqa
+    )  # noqa
 
 
 def test_description(parsed_items):
@@ -99,7 +105,10 @@ def test_location(parsed_items):
 
 
 def test_source(parsed_items):
-    assert parsed_items[0]["source"] == "https://www.dart.org/about/public-access-information/board-meetings-information"  # noqa
+    assert (
+        parsed_items[0]["source"]
+        == "https://www.dart.org/about/public-access-information/board-meetings-information"  # noqa
+    )  # noqa
 
 
 def test_id(parsed_items):
@@ -128,7 +137,8 @@ def test_board_classification(parsed_items):
 
 def test_committee_classification(parsed_items):
     committee_items = [
-        i for i in parsed_items
+        i
+        for i in parsed_items
         if "committee" in i["title"].lower() and "board" not in i["title"].lower()
     ]
     for item in committee_items:
@@ -161,20 +171,21 @@ def test_meeting_links(parsed_items):
 def test_cutoff_date(parsed_items):
     """No meetings should be older than current year - 3."""
     from datetime import datetime
+
     cutoff = datetime(datetime.now().year - 3, 1, 1)
     for item in parsed_items:
-        assert item["start"] >= cutoff, (
-            f"Meeting {item['title']} at {item['start']} is before cutoff {cutoff}"  # noqa
-        )
+        assert (
+            item["start"] >= cutoff
+        ), f"Meeting {item['title']} at {item['start']} is before cutoff {cutoff}"  # noqa
 
 
 #  Title normalization tests
 def test_no_date_prefix_in_title(parsed_items):
     """Titles should not start with a date like '2026-05-12 '."""
     for item in parsed_items:
-        assert not item["title"].startswith(tuple("0123456789")), (
-            f"Title has leading date: {item['title']}"
-        )
+        assert not item["title"].startswith(
+            tuple("0123456789")
+        ), f"Title has leading date: {item['title']}"
 
 
 #  _norm_title unit tests

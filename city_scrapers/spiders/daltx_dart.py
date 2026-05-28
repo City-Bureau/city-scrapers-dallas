@@ -18,7 +18,6 @@ class DaltxDartSpider(CityScrapersSpider):
     # Current meetings + upcoming calendar
     start_urls = "https://www.dart.org/about/public-access-information/board-meetings-information"  # noqa
 
-
     custom_settings = {
         "ROBOTSTXT_OBEY": False,
         "FEED_EXPORT_ENCODING": "utf-8",
@@ -185,10 +184,14 @@ class DaltxDartSpider(CityScrapersSpider):
             return None
 
         # If multiple match, prefer the one with the most word overlap
-        best = max(matches, key=lambda c: len(
-            set(self._norm_title(title).split()) & set(self._norm_title(c["title"]).split())
-        ))
-        return {"href": best["href"], "title": "Video"}
+        best_match = max(
+            matches,
+            key=lambda c: len(
+                set(self._norm_title(title).split())
+                & set(self._norm_title(c["title"]).split())
+            ),
+        )
+        return {"href": best_match["href"], "title": "Video"}
 
     def _norm_title(self, title: str) -> str:
         normalized = title.lower()
@@ -377,7 +380,9 @@ class DaltxDartSpider(CityScrapersSpider):
                 t = datetime.strptime(normalised, fmt)
                 return t.hour, t.minute
             except ValueError:
-                self.logger.warning("Time string '%s' does not match format '%s'", normalised, fmt)
+                self.logger.warning(
+                    "Time string '%s' does not match format '%s'", normalised, fmt
+                )
                 continue
 
         self.logger.warning("Could not parse time string: '%s'", time_str)

@@ -30,41 +30,23 @@ class DaltxCityCouncilSpider(LegistarSpider):
             event["Meeting Time"] = self._preprocess_meeting_time(event)
             meeting = Meeting(
                 title=event["Name"],
-                description=self._parse_description(event),
-                classification=self._parse_classification(event),
+                description="",
+                classification=CITY_COUNCIL,
                 start=self.legistar_start(event),
-                end=self._parse_end(event),
-                all_day=self._parse_all_day(event),
-                time_notes=self._parse_time_notes(event),
+                end=None,
+                all_day=False,
+                time_notes="",
                 location=self._parse_location(event),
                 links=self.legistar_links(event),
                 source=self.legistar_source(event),
             )
 
-            meeting["status"] = self._get_status(meeting)
+            meeting["status"] = self._get_status(
+                meeting, text=meeting["location"]["name"] or ""
+            )
             meeting["id"] = self._get_id(meeting)
 
             yield meeting
-
-    def _parse_description(self, item):
-        """Parse or generate meeting description."""
-        return ""
-
-    def _parse_classification(self, item):
-        """Parse or generate classification from allowed options."""
-        return CITY_COUNCIL
-
-    def _parse_end(self, item):
-        """Parse end datetime as a naive datetime object. Added by pipeline if None"""
-        return None
-
-    def _parse_time_notes(self, item):
-        """Parse any additional notes on the timing of the meeting"""
-        return ""
-
-    def _parse_all_day(self, item):
-        """Parse or generate all-day status. Defaults to False."""
-        return False
 
     def _parse_location(self, item):
         """Parse or generate location."""
@@ -126,9 +108,18 @@ class DaltxCityCouncilSpider(LegistarSpider):
                     else:
                         data[header] = field_text
 
+                ical_url = (
+                    data["iCalendar"].get("url")
+                    if isinstance(data.get("iCalendar"), dict)
+                    else None
+                )
+                if ical_url is not None:
+                    if ical_url in self._scraped_urls:
+                        continue
+                    self._scraped_urls.add(ical_url)
                 if data:
                     events.append(dict(data))
             except Exception as e:
-                print(f"Error processing row: {str(e)}")
+                self.logger.warning(f"Error processing row: {e}", exc_info=True)
 
         return events

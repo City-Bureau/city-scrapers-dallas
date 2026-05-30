@@ -62,8 +62,8 @@ def test_no_duplicates(parsed_items):
 def test_title(parsed_items):
     assert (
         parsed_items[0]["title"]
-        == "DART NOTICE of Possible Quorum at Dallas City Council Transportation and Infrastructure Committee Meeting"  # noqa: E501
-    )
+        == "DART NOTICE of Possible Quorum at Dallas City Council Transportation and Infrastructure Committee Meeting"  # noqa
+    )  # noqa
 
 
 def test_description(parsed_items):
@@ -107,8 +107,8 @@ def test_location(parsed_items):
 def test_source(parsed_items):
     assert (
         parsed_items[0]["source"]
-        == "https://www.dart.org/about/public-access-information/board-meetings-information"  # noqa: E501
-    )
+        == "https://www.dart.org/about/public-access-information/board-meetings-information"  # noqa
+    )  # noqa
 
 
 def test_id(parsed_items):

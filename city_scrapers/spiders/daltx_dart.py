@@ -184,14 +184,14 @@ class DaltxDartSpider(CityScrapersSpider):
             return None
 
         # If multiple match, prefer the one with the most word overlap
-        best = max(
+        best_match = max(
             matches,
             key=lambda c: len(
                 set(self._norm_title(title).split())
                 & set(self._norm_title(c["title"]).split())
             ),
         )
-        return {"href": best["href"], "title": "Video"}
+        return {"href": best_match["href"], "title": "Video"}
 
     def _norm_title(self, title: str) -> str:
         normalized = title.lower()
@@ -327,7 +327,7 @@ class DaltxDartSpider(CityScrapersSpider):
         """Parse meeting title, stripping leading date prefixes like '2026-05-18 '."""
         title = item.get("title", "").strip()
         title = re.sub(r"^\d{4}-\d{2}-\d{2}\s+", "", title)
-        title = re.sub(r"\s*\(Cancell?ed\)\s*", "", title, flags=re.IGNORECASE)
+        title = re.sub(r"\((Cancell?ed?)\)", r"\1", title, flags=re.IGNORECASE)
         return title.strip()
 
     def _parse_classification(self, item: dict) -> int:

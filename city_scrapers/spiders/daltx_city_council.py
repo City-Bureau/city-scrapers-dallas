@@ -71,6 +71,7 @@ class DaltxCityCouncilSpider(LegistarSpider):
         address = "1500 Marilla Street Dallas, TX 75201"
         location = item.get("Meeting Location", "")
         if isinstance(location, dict):
+            address = location.get("url", "")
             location = location.get("label", "")
         return {
             "name": location,
@@ -128,6 +129,6 @@ class DaltxCityCouncilSpider(LegistarSpider):
                 if data:
                     events.append(dict(data))
             except Exception as e:
-                self.logger.warning("Error processing row: %s", e)
+                print(f"Error processing row: {str(e)}")
 
         return events

@@ -134,7 +134,7 @@ def test_links():
             "title": "Agenda",
         },
         {
-            "href": "https://dallasisdtx.new.swagit.com/videos/384412",
+            "href": "https://dallasisdtx.new.swagit.com/videos/389507",
             "title": "Video",
         },
     ]

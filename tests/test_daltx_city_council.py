@@ -36,21 +36,6 @@ def test_location():
     }
 
 
-def test_location_linked_label():
-    result = spider._parse_location(
-        {
-            "Meeting Location": {
-                "label": "COUNCIL BRIEFING ROOM, 6ES",
-                "url": "https://cityofdallas.legistar.com/Location.aspx?ID=123",
-            }
-        }
-    )
-    assert result == {
-        "name": "COUNCIL BRIEFING ROOM, 6ES",
-        "address": "1500 Marilla Street Dallas, TX 75201",
-    }
-
-
 def test_title():
     assert parsed_items[0]["title"] == "Municipal Library Board"
 

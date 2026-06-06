@@ -16,7 +16,9 @@ class DaltxDartSpider(CityScrapersSpider):
     timezone = "America/Chicago"
 
     # Current meetings + upcoming calendar
-    start_urls = "https://www.dart.org/about/public-access-information/board-meetings-information"  # noqa
+    start_urls = [
+        "https://www.dart.org/about/public-access-information/board-meetings-information"  # noqa
+    ]
 
     custom_settings = {
         "ROBOTSTXT_OBEY": False,
@@ -64,7 +66,7 @@ class DaltxDartSpider(CityScrapersSpider):
 
     def start_requests(self):
         # Upcoming meetings DART page
-        yield scrapy.Request(self.start_urls, callback=self.parse)
+        yield scrapy.Request(self.start_urls[0], callback=self.parse)
 
         # Video archive tabs (run in parallel with the main crawl)
         for tab in self.VIDEO_TABS:
